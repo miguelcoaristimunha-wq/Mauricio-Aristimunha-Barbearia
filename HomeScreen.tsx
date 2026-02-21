@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { User, Service, ShopConfig } from './types.ts';
-import { dataRepository, isShopOpen } from './dataRepository.ts';
+import { dataRepository, isShopOpen, isManuallyClosed } from './dataRepository.ts';
 import { ServiceImage } from './ServiceImage.tsx';
 import logoImg from './logo.jpg';
 import mapaImg from './mapa_final.jpg';
@@ -15,9 +15,22 @@ export const HomeScreen: React.FC<{
   shopConfig: ShopConfig | null
 }> = ({ user, onStartBooking, onViewRanking, onViewAllServices, shopConfig }) => {
   const [services, setServices] = useState<Service[]>([]);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [mapError, setMapError] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleMapClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsRedirecting(true);
+    setTimeout(() => {
+      window.open("https://maps.app.goo.gl/KgcpvTgWGBxtUztn7", "_blank");
+      setIsRedirecting(false);
+    }, 1500);
+  };
 
   // Calcula se a loja está aberta automaticamente com base no horário
   const isOpen = isShopOpen(shopConfig);
+  const isClosedManually = isManuallyClosed(shopConfig);
 
   useEffect(() => {
     const loadData = async () => {
@@ -30,7 +43,15 @@ export const HomeScreen: React.FC<{
   }, []);
 
   return (
-    <div className="flex-1 px-5 pt-10 pb-36 animate-fade-in overflow-y-auto scrollbar-hide">
+    <div className="px-5 pt-10 pb-36 animate-fade-in">
+      {/* Overlay de Redirecionamento Premium */}
+      {isRedirecting && (
+        <div className="fixed inset-0 z-[200] bg-premium-black/80 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
+          <div className="w-20 h-20 border-4 border-gold/20 border-t-gold rounded-full animate-spin mb-6"></div>
+          <p className="text-gold font-display text-xl font-bold tracking-widest animate-pulse">ABRINDO MAPA...</p>
+          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] mt-2">Preparando sua rota premium</p>
+        </div>
+      )}
       <header className="flex justify-between items-center mb-10 animate-slide-up">
         <div>
           <p className="text-gold text-[10px] font-black tracking-[0.3em] uppercase mb-1">Olá, {user?.name.split(' ')[0]}</p>
@@ -57,15 +78,17 @@ export const HomeScreen: React.FC<{
 
       {/* Aviso de Barbearia Fechada */}
       {!isOpen && (
-        <div className="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-premium animate-bounce">
-          <div className="flex items-center gap-3 text-red-500">
-            <span className="material-icons-round">error_outline</span>
-            <p className="text-sm font-bold uppercase tracking-widest">Barbearia Fechada no Momento</p>
+        <div className={`mb-8 p-6 rounded-premium animate-bounce ${isClosedManually ? 'bg-red-500/10 border-red-500/20' : 'bg-gold/5 border-gold/10'}`}>
+          <div className={`flex items-center gap-3 ${isClosedManually ? 'text-red-500' : 'text-gold'}`}>
+            <span className="material-icons-round">{isClosedManually ? 'error_outline' : 'schedule'}</span>
+            <p className="text-sm font-bold uppercase tracking-widest">
+              {isClosedManually ? 'Barbearia Fechada no Momento' : 'Fora do Horário de Atendimento'}
+            </p>
           </div>
           <p className="text-[10px] text-gray-500 mt-1 font-medium ml-9">
-            {!shopConfig?.is_open
+            {isClosedManually
               ? 'O admin desabilitou novos agendamentos temporariamente.'
-              : 'Estamos fora do horário de atendimento no momento.'}
+              : 'Estamos fechados agora, mas você ainda pode agendar para os próximos horários!'}
           </p>
         </div>
       )}
@@ -73,24 +96,41 @@ export const HomeScreen: React.FC<{
       {/* Card de Localização (Mapa Final) */}
       <a
         href="https://maps.app.goo.gl/KgcpvTgWGBxtUztn7"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative block w-full h-56 rounded-premium overflow-hidden mb-8 shadow-2xl group active:scale-[0.96] transition-all border border-gold/20"
+        onClick={handleMapClick}
+        className="relative block w-full h-56 rounded-premium overflow-hidden mb-8 shadow-2xl group active:scale-[0.96] transition-all border border-gold/20 bg-premium-gray"
       >
+        {/* Shimmer de Carregamento */}
+        {mapLoading && (
+          <div className="absolute inset-0 shimmer-loading animate-shimmer-premium z-10"></div>
+        )}
+
         <img
           src={mapaImg}
           alt="Localização"
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          onLoad={() => setMapLoading(false)}
+          onError={() => {
+            setMapLoading(false);
+            setMapError(true);
+          }}
+          className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ${mapLoading || mapError ? 'opacity-0' : 'opacity-100'}`}
         />
 
+        {/* Fallback caso a imagem falhe */}
+        {mapError && (
+          <div className="absolute inset-0 bg-premium-charcoal flex flex-col items-center justify-center p-6 text-center">
+            <span className="material-icons-round text-gold/20 text-6xl mb-2">map</span>
+            <p className="text-gold/40 text-[10px] font-black uppercase tracking-[0.2em]">Mapa indisponível no momento</p>
+          </div>
+        )}
+
         {/* Overlay com Gradiente para Legibilidade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
 
         {/* Indicadores Visuais (Ícone e Frases) */}
         <div className="absolute inset-0 flex flex-col justify-end p-6">
           <div className="flex items-center gap-3">
             {/* Ícone de Mapa Dourado */}
-            <div className="w-12 h-12 bg-gold rounded-2xl flex items-center justify-center shadow-gold-glow animate-pulse">
+            <div className="w-12 h-12 bg-gold rounded-2xl flex items-center justify-center shadow-gold-glow group-hover:scale-110 transition-transform">
               <span className="material-icons-round text-premium-black text-2xl">location_on</span>
             </div>
 
@@ -115,23 +155,23 @@ export const HomeScreen: React.FC<{
         </div>
 
         {/* Ícone de Mapa Flutuante no Canto */}
-        <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-2 group-hover:bg-gold/20 transition-colors">
-          <span className="material-icons-round text-white/80 group-hover:text-gold transition-colors">map</span>
+        <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-2 group-hover:bg-gold transition-colors">
+          <span className="material-icons-round text-white/80 group-hover:text-premium-black transition-colors">map</span>
         </div>
       </a>
 
       {/* Ações Rápidas */}
       <div className="grid grid-cols-2 gap-4 mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <button
-          onClick={isOpen ? onStartBooking : undefined}
-          disabled={!isOpen}
-          className={`p-6 rounded-premium text-left shadow-luxury border border-transparent transition-all ${isOpen
+          onClick={isClosedManually ? undefined : onStartBooking}
+          disabled={isClosedManually}
+          className={`p-6 rounded-premium text-left shadow-luxury border border-transparent transition-all ${!isClosedManually
             ? 'bg-premium-cream dark:bg-premium-gray active:border-gold/50 active:scale-95'
             : 'bg-gray-100 dark:bg-premium-charcoal opacity-50 cursor-not-allowed'
             }`}
         >
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isOpen ? 'bg-gold/10' : 'bg-gray-200 dark:bg-white/5'}`}>
-            <span className={`material-icons-round text-2xl ${isOpen ? 'text-gold' : 'text-gray-400'}`}>event_note</span>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${!isClosedManually ? 'bg-gold/10' : 'bg-gray-200 dark:bg-white/5'}`}>
+            <span className={`material-icons-round text-2xl ${!isClosedManually ? 'text-gold' : 'text-gray-400'}`}>event_note</span>
           </div>
           <p className="text-[11px] font-black text-premium-charcoal dark:text-white uppercase tracking-widest leading-tight">Novo<br />Agendamento</p>
         </button>

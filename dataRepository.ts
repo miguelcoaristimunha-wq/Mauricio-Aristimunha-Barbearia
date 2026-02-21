@@ -2,11 +2,18 @@ import { supabase } from './supabase';
 import { Service, Professional, Appointment, User, ShopConfig, RankingItem } from './types';
 
 /**
+ * Checks ONLY if the admin manually closed the shop
+ */
+export const isManuallyClosed = (config: ShopConfig | null): boolean => {
+    return config?.is_open === false;
+};
+
+/**
  * Utility to check if shop is open based on config flag and current time/opening_hours
  */
 export const isShopOpen = (config: ShopConfig | null): boolean => {
     if (!config) return true;
-    if (config.is_open === false) return false; // Manual override (Emergency Close)
+    if (isManuallyClosed(config)) return false; // Manual override (Emergency Close)
     if (!config.opening_hours) return true;
 
     try {
@@ -110,16 +117,39 @@ class DataRepository {
         this.listeners.forEach(l => l());
     }
 
-    public subscribeToTable(table: string, callback: () => void) {
+    /**
+     * Subscribe to real-time changes on specific table
+     */
+    public subscribeToChanges(table: string, callback: (payload: any) => void) {
         const channel = supabase
-            .channel(`public:${table}_changes`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: table }, (payload) => {
-                console.log(`Update from Supabase [${table}]:`, payload);
-                callback();
-            })
-            .subscribe((status) => {
-                console.log(`Status da assinatura [${table}]:`, status);
-            });
+            .channel(`realtime_${table}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table },
+                (payload) => callback(payload)
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }
+
+    // Legacy subscribe for backward compatibility if needed, but enhanced
+    public subscribeToLegacyChanges(callback: (payload?: any) => void) {
+        const channel = supabase
+            .channel('realtime_changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'appointments' },
+                (payload) => callback(payload)
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'config' },
+                (payload) => callback(payload)
+            )
+            .subscribe();
 
         return () => {
             supabase.removeChannel(channel);

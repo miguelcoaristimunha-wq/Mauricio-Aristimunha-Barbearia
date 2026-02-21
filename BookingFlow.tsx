@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BookingStep, Service, Professional, Appointment } from './types';
 import { TIME_SLOTS } from './constants';
 import { PremiumButton } from './PremiumButton';
-import { dataRepository } from './dataRepository';
+import { dataRepository, isManuallyClosed } from './dataRepository';
 import { ServiceImage } from './ServiceImage';
 import { notificationService } from './notificationService';
 
@@ -21,21 +21,49 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }));
+  // Generating dates for the next 14 days and filtering by work_days defined in Admin
+  const workDays = shopConfig?.work_days || [1, 2, 3, 4, 5, 6]; // Default: Segunda a Sábado
+
+  const availableDates = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      iso: d.toISOString().split('T')[0],
+      display: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', ''),
+      weekday: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+      full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
+      dayOfWeek: d.getDay()
+    };
+  }).filter(date => workDays.includes(date.dayOfWeek))
+    .slice(0, 7); // Pega os primeiros 7 dias úteis a partir de hoje
+
+  const [selectedDateIso, setSelectedDateIso] = useState(availableDates[0]?.iso || '');
+  const [selectedDate, setSelectedDate] = useState(availableDates[0]?.full || '');
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [unavailableSlots, setUnavailableSlots] = useState<string[]>([]);
 
-  // Correct Date Handling: Use current date as ISO (YYYY-MM-DD) for DB compatibility
-  // In a real app with a date picker, this would come from the picker
-  const [selectedDateIso] = useState(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  });
+  // Guard: Se a barbearia estiver fechada manualmente, mostra tela de erro/aviso
+  if (isManuallyClosed(shopConfig)) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-10 text-center animate-fade-in">
+        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+          <span className="material-icons-round text-red-500 text-4xl">store_front</span>
+        </div>
+        <h2 className="font-display text-2xl text-premium-black dark:text-white mb-2">Barbearia Fechada</h2>
+        <p className="text-gray-500 text-sm leading-relaxed mb-8">
+          Desculpe o transtorno, mas o administrador desativou novos agendamentos temporariamente. <br />
+          Tente novamente mais tarde!
+        </p>
+        <button
+          onClick={onCancel}
+          className="w-full py-4 bg-premium-black dark:bg-white dark:text-premium-black text-white rounded-premium font-bold uppercase tracking-widest active:scale-95 transition-all"
+        >
+          Voltar para Início
+        </button>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -217,23 +245,58 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
         {step === BookingStep.TIME && (
           <div className="animate-slide-up">
             <h3 className="text-lg font-bold mb-4 dark:text-white">Escolha o Horário</h3>
+
+            {/* Seletor de Data Horizontal */}
+            <div className="flex gap-3 overflow-x-auto pb-6 scrollbar-hide -mx-6 px-6">
+              {availableDates.map(date => (
+                <button
+                  key={date.iso}
+                  onClick={() => {
+                    setSelectedDateIso(date.iso);
+                    setSelectedDate(date.full);
+                    setSelectedTime(null); // Limpa o horário ao trocar de dia
+                  }}
+                  className={`flex flex-col items-center min-w-[70px] p-4 rounded-2xl border-2 transition-all ${selectedDateIso === date.iso
+                    ? 'border-gold bg-gold/10 shadow-gold-glow'
+                    : 'border-transparent bg-premium-cream dark:bg-premium-gray opacity-60'
+                    }`}
+                >
+                  <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${selectedDateIso === date.iso ? 'text-gold' : 'text-gray-400'}`}>
+                    {date.weekday}
+                  </span>
+                  <span className={`text-lg font-black ${selectedDateIso === date.iso ? 'text-gold' : 'dark:text-white'}`}>
+                    {date.display.split(' de')[0]}
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <p className="text-sm text-gold font-bold mb-4 capitalize">
-              {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {selectedDate}
             </p>
 
             <div className="grid grid-cols-3 gap-3">
               {(shopConfig?.time_slots || TIME_SLOTS).map(time => {
                 const isTaken = unavailableSlots.includes(time);
 
-                // --- Past Time Check ---
+                // --- Past Time Check with Buffer ---
                 let isPast = false;
                 const today = new Date();
-                const nowHour = today.getHours();
-                const nowMin = today.getMinutes();
-                const [slotHour, slotMin] = time.split(':').map(Number);
+                const todayIso = today.toISOString().split('T')[0];
 
-                if (slotHour < nowHour || (slotHour === nowHour && slotMin <= nowMin)) {
-                  isPast = true;
+                // Só bloqueia horários passados se o dia selecionado for HOJE
+                if (selectedDateIso === todayIso) {
+                  const now = new Date();
+                  const [slotHour, slotMin] = time.split(':').map(Number);
+                  const slotTime = new Date();
+                  slotTime.setHours(slotHour, slotMin, 0, 0);
+
+                  // Buffer de 15 minutos (não permite agendar algo que começa em menos de 15 min)
+                  const bufferTime = new Date(now.getTime() + 15 * 60000);
+
+                  if (slotTime < bufferTime) {
+                    isPast = true;
+                  }
                 }
 
                 const isDisabled = isTaken || isPast;

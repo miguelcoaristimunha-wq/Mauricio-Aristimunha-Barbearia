@@ -17,17 +17,19 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
 
     return (
         <div className="flex-1 flex flex-col bg-premium-pearl dark:bg-premium-black animate-fade-in">
-            <header className="relative px-6 pt-16 pb-8 border-b border-gray-100 dark:border-white/5 bg-white/80 dark:bg-premium-black/80 backdrop-blur-xl sticky top-0 z-30">
-                <button
-                    onClick={onBack}
-                    className="absolute left-6 top-16 w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold active:scale-90 transition-all border border-gold/20"
-                >
-                    <span className="material-icons-round text-2xl">arrow_back</span>
-                </button>
+            <header className="px-6 pt-16 pb-8 border-b border-gray-100 dark:border-white/5 bg-white/80 dark:bg-premium-black/80 backdrop-blur-xl sticky top-0 z-30">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onBack}
+                        className="w-12 h-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold active:scale-90 transition-all border border-gold/20 shrink-0"
+                    >
+                        <span className="material-icons-round text-2xl">arrow_back</span>
+                    </button>
 
-                <div className="text-center">
-                    <p className="text-gold text-[10px] font-black tracking-[0.4em] uppercase mb-1">Catálogo Completo</p>
-                    <h2 className="text-3xl font-display font-bold text-premium-black dark:text-white">Nossos Serviços</h2>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-gold text-[10px] font-black tracking-[0.4em] uppercase mb-0.5">Catálogo Completo</p>
+                        <h2 className="text-2xl font-display font-bold text-premium-black dark:text-white leading-tight truncate">Nossos Serviços</h2>
+                    </div>
                 </div>
             </header>
 

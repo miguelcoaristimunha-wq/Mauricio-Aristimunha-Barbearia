@@ -34,6 +34,14 @@ const App: React.FC = () => {
     (window as any).setAppScreen = setScreen;
   }, []);
 
+  // Reset scroll on screen change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    // Force nested scrollable elements to top if they exist
+    const scrollables = document.querySelectorAll('.overflow-y-auto');
+    scrollables.forEach(el => el.scrollTop = 0);
+  }, [screen]);
+
   // Sincronização e Mirroring
   useEffect(() => {
     // ... logic inside ...
@@ -112,13 +120,44 @@ const App: React.FC = () => {
 
     init();
 
-    const unsubscribe = dataRepository.subscribe(() => {
-      loadAppointments();
-      loadShopConfig();
+    const unsubscribeAppointments = dataRepository.subscribeToChanges('appointments', (payload) => {
+      console.log('Real-time appointment update:', payload);
+      const { eventType, new: newRecord, old: oldRecord } = payload;
+
+      setAppointments(prev => {
+        if (eventType === 'INSERT') return [newRecord, ...prev];
+        if (eventType === 'UPDATE') return prev.map(a => a.id === newRecord.id ? { ...a, ...newRecord } : a);
+        if (eventType === 'DELETE') return prev.filter(a => a.id !== oldRecord.id);
+        return prev;
+      });
+    });
+
+    const unsubscribeConfig = dataRepository.subscribeToChanges('config', (payload) => {
+      console.log('Real-time config update:', payload);
+      if (payload.new) {
+        setShopConfig(payload.new);
+      }
+    });
+
+    const unsubscribeProfile = dataRepository.subscribeToChanges('clients', (payload) => {
+      if (user?.id && (payload.new?.id === user.id || payload.old?.id === user.id)) {
+        console.log('Real-time profile update:', payload);
+        if (payload.new) {
+          const updatedUser = {
+            ...user,
+            ...payload.new,
+            whatsapp: payload.new.phone || user.whatsapp // Mapeamento para garantir compatibilidade
+          };
+          setUser(updatedUser);
+          localStorage.setItem('luxury_barber_user', JSON.stringify(updatedUser));
+        }
+      }
     });
 
     return () => {
-      unsubscribe();
+      unsubscribeAppointments();
+      unsubscribeConfig();
+      unsubscribeProfile();
     };
   }, [user?.id]);
 
@@ -184,8 +223,8 @@ const App: React.FC = () => {
   const showNav = user && [AppScreen.HOME, AppScreen.MY_APPOINTMENTS, AppScreen.PROFILE, AppScreen.BOOKING, AppScreen.RANKING].includes(screen);
 
   return (
-    <div className={`min-h-screen flex flex-col max-w-lg mx-auto overflow-x-hidden ${isDarkMode ? 'dark' : ''}`}>
-      <main className="flex-1 flex flex-col bg-premium-pearl dark:bg-premium-black">
+    <div className={`h-[100dvh] flex flex-col max-w-lg mx-auto overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
+      <main className="flex-1 overflow-y-auto bg-premium-pearl dark:bg-premium-black scrollbar-hide">
         {(screen === AppScreen.SPLASH || dataLoading) && (
           <SplashScreen
             onFinish={() => {
@@ -230,7 +269,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {showNav && <Navigation currentScreen={screen} onNavigate={setScreen} />}
+      {showNav && <Navigation currentScreen={screen} onNavigate={setScreen} shopConfig={shopConfig} />}
     </div>
   );
 };

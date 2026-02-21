@@ -6,8 +6,15 @@ import logoImg from './logo.jpg';
 export const SplashScreen: React.FC<{ onFinish: () => void; shopConfig: ShopConfig | null }> = ({ onFinish, shopConfig }) => {
   const [visible, setVisible] = useState(false);
 
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   useEffect(() => {
     setVisible(true);
+
+    // Pré-carregamento do mapa durante o splash
+    const preloadMap = new Image();
+    preloadMap.src = './mapa_final.jpg';
+
     const timer = setTimeout(onFinish, 3000);
     return () => clearTimeout(timer);
   }, [onFinish]);
@@ -22,11 +29,17 @@ export const SplashScreen: React.FC<{ onFinish: () => void; shopConfig: ShopConf
       className={`fixed inset-0 z-[100] bg-premium-black flex flex-col items-center justify-center transition-opacity duration-1000 cursor-pointer ${visible ? 'opacity-100' : 'opacity-0'}`}
     >
       <div className={`flex flex-col items-center transition-all duration-1000 transform ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="w-28 h-28 rounded-full overflow-hidden mb-6 shadow-gold-glow-strong border-2 border-gold/50 active:scale-95 transition-transform bg-premium-gray flex items-center justify-center">
+        <div className="w-28 h-28 rounded-full overflow-hidden mb-6 shadow-gold-glow-strong border-2 border-gold/50 active:scale-95 transition-transform bg-premium-gray flex items-center justify-center relative">
+          {/* Shimmer enquanto a logo decodifica */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 shimmer-loading animate-shimmer-premium"></div>
+          )}
+
           <img
-            src={shopConfig?.admin_photo || logoImg}
+            src={logoImg} // Prioriza local para Splash ser instantâneo
             alt={shopConfig?.app_name || 'Barbearia'}
-            className="w-full h-full object-cover"
+            onLoad={() => setImageLoaded(true)}
+            className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </div>
         <h1 className="font-display text-3xl text-gold text-center tracking-widest uppercase mb-2">

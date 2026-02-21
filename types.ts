@@ -48,6 +48,7 @@ export interface ShopConfig {
   opening_hours: string;
   is_open: boolean;
   time_slots: string[];
+  work_days?: number[];
 }
 
 export interface RankingItem {

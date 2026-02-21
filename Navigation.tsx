@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { AppScreen } from './types';
+import { AppScreen, ShopConfig } from './types';
+import { isManuallyClosed } from './dataRepository';
 
 interface BottomNavProps {
     currentScreen: AppScreen;
     onNavigate: (screen: AppScreen) => void;
+    shopConfig: ShopConfig | null;
 }
 
 const tabs = [
@@ -15,7 +17,8 @@ const tabs = [
     { screen: AppScreen.PROFILE, icon: 'person', label: 'Perfil' },
 ];
 
-export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate, shopConfig }) => {
+    const isClosed = isManuallyClosed(shopConfig);
     return (
         <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-50">
             <div className="bg-white/95 dark:bg-premium-black/95 backdrop-blur-xl border-t border-gray-100 dark:border-white/5 px-2 pb-safe">
@@ -25,9 +28,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
 
                         if (tab.isFab) {
                             return (
-                                <div key={tab.screen} className="flex-1 flex justify-center -mt-8">
+                                <div key={tab.screen} className={`flex-1 flex justify-center -mt-8 ${isClosed ? 'opacity-50 pointer-events-none' : ''}`}>
                                     <button
-                                        onClick={() => onNavigate(tab.screen)}
+                                        onClick={() => !isClosed && onNavigate(tab.screen)}
+                                        disabled={isClosed}
                                         className="w-14 h-14 bg-gold rounded-full flex items-center justify-center shadow-gold-glow-strong border-4 border-white dark:border-premium-black active:scale-95 transition-all"
                                     >
                                         <span className="material-icons-round text-premium-black text-3xl">add</span>

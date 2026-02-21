@@ -25,7 +25,7 @@ export const SplashScreen: React.FC<{ onFinish: () => void; shopConfig: ShopConf
         <div className="w-28 h-28 rounded-full overflow-hidden mb-6 shadow-gold-glow-strong border-2 border-gold/50 active:scale-95 transition-transform bg-premium-gray flex items-center justify-center">
           <img
             src={shopConfig?.admin_photo || '/logo.jpg'}
-            alt={shopConfig?.app_name || 'MA Barbearia'}
+            alt={shopConfig?.app_name || 'Barbearia'}
             className="w-full h-full object-cover"
           />
         </div>

@@ -46,7 +46,7 @@ export const HomeScreen: React.FC<{
         </div>
         <div className="w-12 h-12 rounded-full overflow-hidden border border-gold/20 shadow-gold-glow bg-premium-gray flex items-center justify-center">
           <img
-            src="/logo.jpg"
+            src={shopConfig?.admin_photo || '/logo.jpg'}
             alt={shopConfig?.app_name || 'MA Barbearia'}
             className="w-full h-full object-cover"
           />

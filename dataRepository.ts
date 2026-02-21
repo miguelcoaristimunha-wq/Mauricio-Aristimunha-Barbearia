@@ -211,7 +211,8 @@ class DataRepository {
                 .from('appointments')
                 .select('*, service:services(*), professional:professionals(*)')
                 .eq('client_id', userId)
-                .order('date', { ascending: false });
+                .order('date', { ascending: true })
+                .order('time', { ascending: true });
 
             if (error) throw error;
 

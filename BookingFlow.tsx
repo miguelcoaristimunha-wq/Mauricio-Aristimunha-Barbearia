@@ -224,20 +224,34 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
             <div className="grid grid-cols-3 gap-3">
               {(shopConfig?.time_slots || TIME_SLOTS).map(time => {
                 const isTaken = unavailableSlots.includes(time);
+
+                // --- Past Time Check ---
+                let isPast = false;
+                const today = new Date();
+                const nowHour = today.getHours();
+                const nowMin = today.getMinutes();
+                const [slotHour, slotMin] = time.split(':').map(Number);
+
+                if (slotHour < nowHour || (slotHour === nowHour && slotMin <= nowMin)) {
+                  isPast = true;
+                }
+
+                const isDisabled = isTaken || isPast;
+
                 return (
                   <button
                     key={time}
-                    disabled={isTaken}
-                    onClick={() => !isTaken && setSelectedTime(time)}
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && setSelectedTime(time)}
                     className={`py-3 rounded-premium font-bold text-sm transition-all relative shadow-luxury ${selectedTime === time
                       ? 'bg-gold text-premium-black shadow-gold-glow'
-                      : isTaken
+                      : isDisabled
                         ? 'bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-white/10 cursor-not-allowed border-none shadow-none'
                         : 'bg-premium-cream dark:bg-premium-gray text-gray-400 hover:border-gold/50 border-2 border-transparent'
                       }`}
                   >
                     {time}
-                    {isTaken && (
+                    {isTaken && !isPast && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>

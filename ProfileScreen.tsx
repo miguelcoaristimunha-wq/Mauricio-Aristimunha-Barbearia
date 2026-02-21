@@ -19,7 +19,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ user, shopConfig, 
           <img src={`https://ui-avatars.com/api/?name=${user?.name}&background=D4AF37&color=000`} className="w-full h-full rounded-full" alt="Profile" />
         </div>
         <h2 className="text-2xl font-bold text-premium-black dark:text-white">{user?.name}</h2>
-        <p className="text-gold text-xs font-bold tracking-[0.2em] uppercase mt-1">Membro Gold</p>
       </header>
 
       <div className="space-y-3 mb-10">

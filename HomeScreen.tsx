@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { User, Service, ShopConfig } from './types.ts';
 import { dataRepository, isShopOpen } from './dataRepository.ts';
 import { ServiceImage } from './ServiceImage.tsx';
+import logoImg from './logo.jpg';
+import mapaImg from './mapa_final.jpg';
 
 
 export const HomeScreen: React.FC<{
@@ -46,7 +48,7 @@ export const HomeScreen: React.FC<{
         </div>
         <div className="w-12 h-12 rounded-full overflow-hidden border border-gold/20 shadow-gold-glow bg-premium-gray flex items-center justify-center">
           <img
-            src={shopConfig?.admin_photo || '/logo.jpg'}
+            src={shopConfig?.admin_photo || logoImg}
             alt={shopConfig?.app_name || 'MA Barbearia'}
             className="w-full h-full object-cover"
           />
@@ -76,7 +78,7 @@ export const HomeScreen: React.FC<{
         className="relative block w-full h-56 rounded-premium overflow-hidden mb-8 shadow-2xl group active:scale-[0.96] transition-all border border-gold/20"
       >
         <img
-          src="/mapa_final.jpg"
+          src={mapaImg}
           alt="Localização"
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />

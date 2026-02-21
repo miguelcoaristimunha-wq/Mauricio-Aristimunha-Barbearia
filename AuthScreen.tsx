@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { PremiumButton } from './PremiumButton';
 import { ShopConfig } from './types';
+import logoImg from './logo.jpg';
 
 export const AuthScreen: React.FC<{
     onLogin: (data: { name: string; whatsapp: string; birthday: string }, mode: 'login' | 'register') => Promise<boolean>;
@@ -49,7 +50,7 @@ export const AuthScreen: React.FC<{
         <div className="flex-1 px-6 pt-16 flex flex-col bg-premium-pearl dark:bg-premium-black animate-fade-in pb-12">
             <div className="flex justify-center mb-8">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gold/30 shadow-gold-glow">
-                    <img src={shopConfig?.admin_photo || '/logo.jpg'} alt={appName} className="w-full h-full object-cover" />
+                    <img src={shopConfig?.admin_photo || logoImg} alt={appName} className="w-full h-full object-cover" />
                 </div>
             </div>
 

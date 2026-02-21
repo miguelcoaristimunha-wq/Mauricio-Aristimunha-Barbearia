@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-
 import { ShopConfig } from './types';
+import logoImg from './logo.jpg';
 
 export const SplashScreen: React.FC<{ onFinish: () => void; shopConfig: ShopConfig | null }> = ({ onFinish, shopConfig }) => {
   const [visible, setVisible] = useState(false);
@@ -24,7 +24,7 @@ export const SplashScreen: React.FC<{ onFinish: () => void; shopConfig: ShopConf
       <div className={`flex flex-col items-center transition-all duration-1000 transform ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="w-28 h-28 rounded-full overflow-hidden mb-6 shadow-gold-glow-strong border-2 border-gold/50 active:scale-95 transition-transform bg-premium-gray flex items-center justify-center">
           <img
-            src={shopConfig?.admin_photo || '/logo.jpg'}
+            src={shopConfig?.admin_photo || logoImg}
             alt={shopConfig?.app_name || 'Barbearia'}
             className="w-full h-full object-cover"
           />

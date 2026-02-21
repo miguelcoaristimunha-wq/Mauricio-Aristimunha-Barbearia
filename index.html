@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maurício Aristimunha Barbearia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            DEFAULT: 'hsl(var(--gold-hsl, 45, 67%, 52%))',
+                            light: 'hsl(var(--gold-hsl-light, 48, 77%, 81%))',
+                            dark: 'hsl(var(--gold-hsl-dark, 43, 89%, 38%))'
+                        },
+                        premium: {
+                            black: '#000000',
+                            gray: '#1A1A1A',
+                            charcoal: '#333333',
+                            pearl: '#FAF9F6',
+                            cream: '#FFFDF5',
+                            sand: '#F2EFE9'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'Inter', 'sans-serif']
+                    },
+                    borderRadius: {
+                        'premium': '24px'
+                    },
+                    boxShadow: {
+                        'luxury': '0 10px 30px -5px rgba(0, 0, 0, 0.05)',
+                        'gold-glow': '0 0 20px rgba(var(--gold-rgb, 212, 175, 55), 0.2)',
+                        'gold-glow-strong': '0 0 30px rgba(var(--gold-rgb, 212, 175, 55), 0.4)'
+                    },
+                    animation: {
+                        'shimmer': 'shimmer 2.5s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slide-up 0.5s ease-out forwards',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        shimmer: {
+                            '0%': { backgroundPosition: '-1000px 0' },
+                            '100%': { backgroundPosition: '1000px 0' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        'slide-up': {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --gold-hsl: 45, 67%, 52%;
+            --gold-hsl-light: 48, 77%, 81%;
+            --gold-hsl-dark: 43, 89%, 38%;
+            --gold-rgb: 212, 175, 55;
+        }
+
+        /* Melhor fix para ícones: inline-flex centraliza melhor e evita cortes */
+        .material-icons-round {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            line-height: normal;
+            width: 1.25em;
+            height: 1.25em;
+            overflow: visible;
+        }
+
+        /* Esconde texto apenas se as fontes NÃO estiverem carregadas */
+        body:not(.fonts-loaded) .material-icons-round {
+            color: transparent !important;
+            text-indent: -9999px;
+            letter-spacing: -1em;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h2 span,
+        .font-display {
+            font-family: 'Outfit', sans-serif !important;
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.4s ease-out forwards;
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+    <link rel="stylesheet" href="./index.css">
+</head>
+
+<body
+    class="bg-premium-pearl dark:bg-premium-black text-premium-charcoal dark:text-gray-100 transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+</body>
+
+</html>

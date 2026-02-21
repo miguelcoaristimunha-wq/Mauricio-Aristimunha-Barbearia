@@ -1,0 +1,5 @@
+/* Fallback index.css for Vercel build */
+
+:root {
+    --app-version: '1.0.0';
+}

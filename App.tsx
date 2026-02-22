@@ -125,8 +125,28 @@ const App: React.FC = () => {
       const { eventType, new: newRecord, old: oldRecord } = payload;
 
       setAppointments(prev => {
-        if (eventType === 'INSERT') return [newRecord, ...prev];
-        if (eventType === 'UPDATE') return prev.map(a => a.id === newRecord.id ? { ...a, ...newRecord } : a);
+        if (eventType === 'INSERT') {
+          // Prevent duplicates if already added via onComplete callback
+          if (prev.some(a => a.id === newRecord.id)) return prev;
+
+          // Map database snake_case to app camelCase if needed, 
+          // though typically getAppointments handles this, INSERT payload might be raw
+          const mappedRecord = {
+            ...newRecord,
+            clientId: newRecord.client_id,
+            serviceId: newRecord.service_id,
+            totalPrice: newRecord.price || newRecord.totalPrice
+          };
+          return [mappedRecord, ...prev];
+        }
+        if (eventType === 'UPDATE') {
+          return prev.map(a => a.id === newRecord.id ? {
+            ...a,
+            ...newRecord,
+            clientId: newRecord.client_id || a.clientId,
+            serviceId: newRecord.service_id || a.serviceId
+          } : a);
+        }
         if (eventType === 'DELETE') return prev.filter(a => a.id !== oldRecord.id);
         return prev;
       });

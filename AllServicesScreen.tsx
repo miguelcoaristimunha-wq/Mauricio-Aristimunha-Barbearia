@@ -54,9 +54,14 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
 
                             <div className="flex-1 min-w-0 py-1">
                                 <h4 className="text-base font-bold text-premium-charcoal dark:text-white group-hover:text-gold transition-colors leading-snug">{service.name}</h4>
-                                <div className="flex items-center gap-2 mt-1.5">
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                     <span className="text-[8px] font-black bg-gold/10 text-gold px-1.5 py-0.5 rounded uppercase tracking-widest">{service.category}</span>
                                     <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">{service.duration} MIN</span>
+                                    {service.tag && (
+                                        <span className="text-[8px] font-black bg-white/10 text-white/40 px-1.5 py-0.5 rounded uppercase tracking-widest border border-white/5">
+                                            {service.tag}
+                                        </span>
+                                    )}
                                 </div>
                                 {service.description && (
                                     <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 leading-tight font-medium">

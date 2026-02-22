@@ -36,7 +36,7 @@ export const RankingScreen: React.FC<{
   }, [currentUserId]);
 
   return (
-    <div className="flex-1 px-6 pt-12 pb-32 animate-slide-up overflow-y-auto scrollbar-hide">
+    <div className="flex-1 px-6 pt-12 pb-32 animate-slide-up">
       <header className="mb-8 text-center">
         <div className="inline-block p-3 bg-gold/10 rounded-full mb-4">
           <span className="material-icons-round text-gold text-4xl">workspace_premium</span>

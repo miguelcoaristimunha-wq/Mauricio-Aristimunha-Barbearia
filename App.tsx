@@ -224,7 +224,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`h-[100dvh] flex flex-col max-w-lg mx-auto overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
-      <main className="flex-1 overflow-y-auto bg-premium-pearl dark:bg-premium-black scrollbar-hide">
+      <main className="flex-1 overflow-y-auto min-h-0 bg-premium-pearl dark:bg-premium-black scrollbar-hide overscroll-contain">
         {(screen === AppScreen.SPLASH || dataLoading) && (
           <SplashScreen
             onFinish={() => {

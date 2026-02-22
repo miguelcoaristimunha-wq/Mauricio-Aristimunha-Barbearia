@@ -33,7 +33,7 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 pt-8 pb-32 space-y-6 scrollbar-hide">
+            <div className="flex-1 px-6 pt-8 pb-32 space-y-6">
                 {services.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                         <div className="w-20 h-20 rounded-full bg-gold/5 flex items-center justify-center mb-6 animate-pulse">

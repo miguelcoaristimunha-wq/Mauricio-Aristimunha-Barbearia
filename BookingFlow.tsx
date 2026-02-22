@@ -180,7 +180,7 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
       </div>
 
       {/* Step Contents */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="flex-1">
         {step === BookingStep.SERVICE && (
           <div className="animate-slide-up">
             <h3 className="text-lg font-bold mb-4 dark:text-white">Selecione o Serviço</h3>

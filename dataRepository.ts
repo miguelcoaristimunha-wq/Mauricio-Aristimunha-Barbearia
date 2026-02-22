@@ -176,7 +176,7 @@ class DataRepository {
                     price: Number(s.price || 0),
                     duration: Number(s.duration || 0),
                     category: s.category || 'Geral',
-                    tag: s.tag || s.tag_name || ''
+                    tag: String(s.tag || s.tag_name || '').trim()
                 })) as Service[];
             }
             return [];

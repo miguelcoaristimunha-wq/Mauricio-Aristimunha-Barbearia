@@ -58,7 +58,7 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
                                     <span className="text-[8px] font-black bg-gold/10 text-gold px-1.5 py-0.5 rounded uppercase tracking-widest">{service.category}</span>
                                     <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">{service.duration} MIN</span>
                                     {service.tag && (
-                                        <span className="text-[8px] font-black bg-white/10 text-white/40 px-1.5 py-0.5 rounded uppercase tracking-widest border border-white/5">
+                                        <span className="text-[10px] font-black bg-gold text-premium-black px-2 py-0.5 rounded shadow-sm uppercase tracking-tighter">
                                             {service.tag}
                                         </span>
                                     )}

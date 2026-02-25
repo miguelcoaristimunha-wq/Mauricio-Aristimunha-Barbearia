@@ -12,9 +12,9 @@ export const HomeScreen: React.FC<{
   onStartBooking: () => void;
   onViewRanking: () => void;
   onViewAllServices: () => void;
-  shopConfig: ShopConfig | null
-}> = ({ user, onStartBooking, onViewRanking, onViewAllServices, shopConfig }) => {
-  const [services, setServices] = useState<Service[]>([]);
+  shopConfig: ShopConfig | null;
+  services: Service[];
+}> = React.memo(({ user, onStartBooking, onViewRanking, onViewAllServices, shopConfig, services }) => {
   const [mapLoading, setMapLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -31,16 +31,6 @@ export const HomeScreen: React.FC<{
   // Calcula se a loja está aberta automaticamente com base no horário
   const isOpen = isShopOpen(shopConfig);
   const isClosedManually = isManuallyClosed(shopConfig);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const fetchedServices = await dataRepository.getServices();
-      setServices(fetchedServices);
-    };
-
-    loadData();
-    return dataRepository.subscribe(loadData);
-  }, []);
 
   return (
     <div className="px-5 pt-10 pb-36 animate-fade-in">
@@ -224,4 +214,4 @@ export const HomeScreen: React.FC<{
       </section>
     </div>
   );
-};
+});

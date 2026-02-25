@@ -4,16 +4,7 @@ import { Service, ShopConfig } from './types';
 import { dataRepository } from './dataRepository';
 import { ServiceImage } from './ServiceImage';
 
-export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopConfig | null }> = ({ onBack, shopConfig }) => {
-    const [services, setServices] = useState<Service[]>([]);
-
-    useEffect(() => {
-        const loadServices = async () => {
-            const fetchedServices = await dataRepository.getServices();
-            setServices(fetchedServices);
-        };
-        loadServices();
-    }, []);
+export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopConfig | null; services: Service[] }> = React.memo(({ onBack, shopConfig, services }) => {
 
     return (
         <div className="flex-1 flex flex-col bg-premium-pearl dark:bg-premium-black animate-fade-in">
@@ -81,4 +72,4 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
             </div>
         </div>
     );
-};
+});

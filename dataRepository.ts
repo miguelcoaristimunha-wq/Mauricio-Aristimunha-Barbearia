@@ -140,6 +140,23 @@ class DataRepository {
         };
     }
 
+    /**
+     * Subscribe to ANY change in services, professionals or config
+     * This allows App.tsx to handle data refresh reactively and centrally
+     */
+    public subscribeToAll(callback: () => void) {
+        const channel = supabase
+            .channel('global_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, callback)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'professionals' }, callback)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_config' }, callback)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }
+
     private notifyListeners() {
         console.log('Notificando ouvintes de mudança nos dados...');
         this.listeners.forEach(l => l());

@@ -37,7 +37,8 @@ export class NotificationService {
         if (this.isEnabled() && Notification.permission === 'granted') {
             new Notification(title, {
                 body,
-                icon: '/logo.jpg' // Reutilizando logomarca se disponível
+                icon: '/logo.jpg', // Caminho absoluto para a raiz do site (pastar public)
+                badge: '/logo.jpg' // Pequeno ícone para barra de status (idealmente PNG transparente)
             });
         }
     }

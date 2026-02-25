@@ -25,6 +25,8 @@ const App: React.FC = () => {
     }
   });
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [shopConfig, setShopConfig] = useState<ShopConfig | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -51,7 +53,6 @@ const App: React.FC = () => {
 
   // Sincronização e Mirroring
   useEffect(() => {
-    // ... logic inside ...
     const loadUser = () => {
       try {
         const savedUser = localStorage.getItem('luxury_barber_user');
@@ -79,15 +80,21 @@ const App: React.FC = () => {
       }
     };
 
-    const loadShopConfig = async () => {
+    const loadGlobalData = async () => {
       try {
-        const config = await dataRepository.getConfig();
+        const [s, p, config] = await Promise.all([
+          dataRepository.getServices(),
+          dataRepository.getProfessionals(),
+          dataRepository.getConfig()
+        ]);
+        setServices(s);
+        setProfessionals(p);
         if (config) {
           setShopConfig(config);
           applyDynamicTheme(config);
         }
       } catch (e) {
-        console.error('Erro ao carregar configuração da barbearia:', e);
+        console.error('Erro ao carregar dados globais:', e);
       }
     };
 
@@ -114,7 +121,7 @@ const App: React.FC = () => {
         // Espera pelos dados e pelas fontes
         await Promise.all([
           loadAppointments(),
-          loadShopConfig(),
+          loadGlobalData(),
           document.fonts.ready.then(() => {
             document.body.classList.add('fonts-loaded');
           })
@@ -159,11 +166,9 @@ const App: React.FC = () => {
       });
     });
 
-    const unsubscribeConfig = dataRepository.subscribeToChanges('shop_config', (payload) => {
-      console.log('Real-time config update:', payload);
-      if (payload.new) {
-        setShopConfig(payload.new);
-      }
+    const unsubscribeGlobal = dataRepository.subscribeToAll(() => {
+      console.log('🔄 Sincronização Global Ativada...');
+      loadGlobalData();
     });
 
     const unsubscribeProfile = dataRepository.subscribeToChanges('clients', (payload) => {
@@ -183,7 +188,7 @@ const App: React.FC = () => {
 
     return () => {
       unsubscribeAppointments();
-      unsubscribeConfig();
+      unsubscribeGlobal();
       unsubscribeProfile();
     };
   }, [user?.id]);
@@ -272,6 +277,7 @@ const App: React.FC = () => {
                 onViewRanking={() => setScreen(AppScreen.RANKING)}
                 onViewAllServices={() => setScreen(AppScreen.ALL_SERVICES)}
                 shopConfig={shopConfig}
+                services={services}
               />
             )}
             {screen === AppScreen.BOOKING && (
@@ -280,11 +286,13 @@ const App: React.FC = () => {
                 onComplete={handleBookingComplete}
                 userId={user?.id || ''}
                 shopConfig={shopConfig}
+                services={services}
+                professionals={professionals}
               />
             )}
             {screen === AppScreen.MY_APPOINTMENTS && <AppointmentsScreen appointments={appointments} />}
             {screen === AppScreen.RANKING && <RankingScreen shopConfig={shopConfig} currentUserId={user?.id} />}
-            {screen === AppScreen.ALL_SERVICES && <AllServicesScreen onBack={() => setScreen(AppScreen.HOME)} shopConfig={shopConfig} />}
+            {screen === AppScreen.ALL_SERVICES && <AllServicesScreen onBack={() => setScreen(AppScreen.HOME)} shopConfig={shopConfig} services={services} />}
             {screen === AppScreen.PROFILE && <ProfileScreen user={user} shopConfig={shopConfig} toggleTheme={toggleTheme} isDarkMode={isDarkMode} onLogout={() => {
               localStorage.clear(); // Limpa TUDO para garantir o "novinho em folha"
               setUser(null);

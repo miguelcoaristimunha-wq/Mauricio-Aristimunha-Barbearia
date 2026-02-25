@@ -12,13 +12,20 @@ interface BookingFlowProps {
   onCancel: () => void;
   onComplete: (appointment: Appointment) => void;
   userId: string;
-  shopConfig: any; // Using any to avoid strict type mismatch if versions differ slightly
+  shopConfig: any;
+  services: Service[];
+  professionals: Professional[];
 }
 
-export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, userId, shopConfig }) => {
+export const BookingFlow: React.FC<BookingFlowProps> = React.memo(({
+  onCancel,
+  onComplete,
+  userId,
+  shopConfig,
+  services,
+  professionals
+}) => {
   const [step, setStep] = useState<BookingStep>(BookingStep.SERVICE);
-  const [services, setServices] = useState<Service[]>([]);
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   // Generating dates for the next 7 days and filtering by work_days defined in Admin
@@ -62,19 +69,6 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
       </div>
     );
   }
-
-  useEffect(() => {
-    const loadData = async () => {
-      const [s, p] = await Promise.all([
-        dataRepository.getServices(),
-        dataRepository.getProfessionals()
-      ]);
-      setServices(s);
-      setProfessionals(p);
-    };
-    loadData();
-    return dataRepository.subscribe(loadData);
-  }, []);
 
   // Fetch availability when entering TIME step or when professional changes
   useEffect(() => {
@@ -183,29 +177,29 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
           <div className="animate-slide-up">
             <h3 className="text-lg font-bold mb-4 dark:text-white">Selecione o Serviço</h3>
             <div className="space-y-4">
-              {services.map(s => (
+              {services.map((service) => (
                 <div
-                  key={s.id}
-                  onClick={() => setSelectedService(s)}
-                  className={`p-4 rounded-premium border-2 transition-all cursor-pointer relative shadow-luxury ${selectedService?.id === s.id ? 'border-gold bg-gold/5' : 'border-transparent bg-premium-cream dark:bg-premium-gray'
+                  key={service.id}
+                  onClick={() => setSelectedService(service)}
+                  className={`p-4 rounded-premium border-2 transition-all cursor-pointer relative shadow-luxury ${selectedService?.id === service.id ? 'border-gold bg-gold/5' : 'border-transparent bg-premium-cream dark:bg-premium-gray'
                     }`}
                 >
-                  {s.tag && (
+                  {service.tag && (
                     <span className="absolute -top-1 -right-1 bg-gold text-premium-black text-[8px] font-black px-2 py-0.5 rounded shadow-sm z-10 uppercase tracking-tighter">
-                      {s.tag}
+                      {service.tag}
                     </span>
                   )}
                   <div className="flex gap-4 items-center">
                     <div className="w-12 h-12 rounded-xl bg-premium-charcoal/5 dark:bg-premium-charcoal/30 flex items-center justify-center border border-gray-100 dark:border-white/5 overflow-hidden shrink-0 shadow-inner">
-                      <ServiceImage src={s.imageUrl} name={s.name} />
+                      <ServiceImage src={service.imageUrl} name={service.name} />
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <h4 className="font-bold dark:text-white">{s.name}</h4>
-                        <span className="text-gold font-bold">R$ {s.price}</span>
+                        <h4 className="font-bold dark:text-white">{service.name}</h4>
+                        <span className="text-gold font-bold">R$ {service.price}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{s.description}</p>
-                      <p className="text-[10px] font-bold text-gold uppercase mt-1 tracking-widest">{s.duration} MIN • {s.category}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{service.description}</p>
+                      <p className="text-[10px] font-bold text-gold uppercase mt-1 tracking-widest">{service.duration} MIN • {service.category}</p>
                     </div>
                   </div>
                 </div>
@@ -218,22 +212,22 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
           <div className="animate-slide-up">
             <h3 className="text-lg font-bold mb-4 dark:text-white">Selecione o Barbeiro</h3>
             <div className="grid grid-cols-2 gap-4">
-              {professionals.map(p => (
+              {professionals.map((professional) => (
                 <div
-                  key={p.id}
-                  onClick={() => setSelectedProfessional(p)}
-                  className={`p-4 rounded-premium border-2 text-center transition-all cursor-pointer group shadow-luxury ${selectedProfessional?.id === p.id ? 'border-gold bg-gold/5' : 'border-transparent bg-premium-cream dark:bg-premium-gray'
+                  key={professional.id}
+                  onClick={() => setSelectedProfessional(professional)}
+                  className={`p-4 rounded-premium border-2 text-center transition-all cursor-pointer group shadow-luxury ${selectedProfessional?.id === professional.id ? 'border-gold bg-gold/5' : 'border-transparent bg-premium-cream dark:bg-premium-gray'
                     }`}
                 >
                   <div className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-transparent group-hover:border-gold overflow-hidden bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                    {p.avatarUrl ? (
-                      <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
+                    {professional.avatarUrl ? (
+                      <img src={professional.avatarUrl} alt={professional.name} className="w-full h-full object-cover" />
                     ) : (
                       <span className="material-icons-round text-gray-400 text-4xl">person</span>
                     )}
                   </div>
-                  <h4 className="text-sm font-bold dark:text-white">{p.name}</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">{p.role}</p>
+                  <h4 className="text-sm font-bold dark:text-white">{professional.name}</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">{professional.role}</p>
                 </div>
               ))}
             </div>
@@ -395,5 +389,4 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
       </div>
     </div>
   );
-};
-
+});

@@ -163,9 +163,9 @@ export const HomeScreen: React.FC<{
       {/* Ações Rápidas */}
       <div className="grid grid-cols-2 gap-4 mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <button
-          onClick={isClosedManually ? undefined : onStartBooking}
-          disabled={isClosedManually}
-          className={`p-6 rounded-premium text-left shadow-luxury border border-transparent transition-all ${!isClosedManually
+          onClick={!isOpen ? undefined : onStartBooking}
+          disabled={!isOpen}
+          className={`p-6 rounded-premium text-left shadow-luxury border border-transparent transition-all ${isOpen
             ? 'bg-premium-cream dark:bg-premium-gray active:border-gold/50 active:scale-95'
             : 'bg-gray-100 dark:bg-premium-charcoal opacity-50 cursor-not-allowed'
             }`}

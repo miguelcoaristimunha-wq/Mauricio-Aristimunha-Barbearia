@@ -2,10 +2,46 @@ import { supabase } from './supabase';
 import { Service, Professional, Appointment, User, ShopConfig, RankingItem } from './types';
 
 /**
+ * Utility to get current local date in YYYY-MM-DD format (prevents UTC issues at night)
+ */
+export const getLocalDateISO = (date: Date = new Date()): string => {
+    // Manually offset to local time or use locale string components
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+/**
  * Checks ONLY if the admin manually closed the shop
  */
 export const isManuallyClosed = (config: ShopConfig | null): boolean => {
     return config?.is_open === false;
+};
+
+/**
+ * Utility to check if a specific "HH:MM" time is within an "HH:MM - HH:MM" range
+ */
+export const isTimeWithinRange = (time: string, range: string | undefined): boolean => {
+    if (!range) return true;
+    try {
+        const parts = range.split('-').map(p => p.trim());
+        if (parts.length !== 2) return true;
+
+        const [tH, tM] = time.split(':').map(Number);
+        const [startH, startM] = parts[0].split(':').map(Number);
+        const [endH, endM] = parts[1].split(':').map(Number);
+
+        const tMinutes = tH * 60 + tM;
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+
+        if (isNaN(tMinutes) || isNaN(startMinutes) || isNaN(endMinutes)) return true;
+
+        return tMinutes >= startMinutes && tMinutes < endMinutes;
+    } catch (e) {
+        return true;
+    }
 };
 
 /**
@@ -14,29 +50,21 @@ export const isManuallyClosed = (config: ShopConfig | null): boolean => {
 export const isShopOpen = (config: ShopConfig | null): boolean => {
     if (!config) return true;
     if (isManuallyClosed(config)) return false; // Manual override (Emergency Close)
+
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 (Domingo) a 6 (Sábado)
+
+    // Check if current day is a work day (if work_days is defined)
+    if (config.work_days && config.work_days.length > 0) {
+        if (!config.work_days.includes(currentDay)) return false;
+    } else if (config.work_days && config.work_days.length === 0) {
+        // If explicitly empty, shop is closed
+        return false;
+    }
+
     if (!config.opening_hours) return true;
 
-    try {
-        // Expected format: "09:00 - 19:00"
-        const parts = config.opening_hours.split('-').map(p => p.trim());
-        if (parts.length !== 2) return true;
-
-        const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        const [startH, startM] = parts[0].split(':').map(Number);
-        const [endH, endM] = parts[1].split(':').map(Number);
-
-        const startMinutes = startH * 60 + startM;
-        const endMinutes = endH * 60 + endM;
-
-        if (isNaN(startMinutes) || isNaN(endMinutes)) return true;
-
-        return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-    } catch (e) {
-        console.error('Error parsing opening hours:', e);
-        return true;
-    }
+    return isTimeWithinRange(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, config.opening_hours);
 };
 
 // Chaves de LocalStorage para Mirroring
@@ -280,6 +308,19 @@ class DataRepository {
     }
 
     async createAppointment(appointment: Omit<Appointment, 'id'>, userId: string): Promise<Appointment | null> {
+        // --- PRE-CHECK: Prevent Out-of-Hours Booking ---
+        const config = await this.getConfig();
+        if (config?.opening_hours) {
+            if (!isTimeWithinRange(appointment.time, config.opening_hours)) {
+                alert('Desculpe, este horário está fora do expediente da barbearia.');
+                return null;
+            }
+        }
+        if (isManuallyClosed(config)) {
+            alert('Agendamentos estão temporariamente desativados pelo administrador.');
+            return null;
+        }
+
         // --- PRE-CHECK: Prevent Double Booking ---
         const existingOnDate = await this.getAppointmentsForDate(appointment.date);
         const isTakenBySomeoneElse = existingOnDate.some(a =>

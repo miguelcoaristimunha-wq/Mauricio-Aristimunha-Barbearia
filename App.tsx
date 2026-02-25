@@ -152,7 +152,7 @@ const App: React.FC = () => {
       });
     });
 
-    const unsubscribeConfig = dataRepository.subscribeToChanges('config', (payload) => {
+    const unsubscribeConfig = dataRepository.subscribeToChanges('shop_config', (payload) => {
       console.log('Real-time config update:', payload);
       if (payload.new) {
         setShopConfig(payload.new);

@@ -46,14 +46,14 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
                         <div
                             key={service.id}
                             style={{ animationDelay: `${idx * 0.1}s` }}
-                            className="bg-premium-cream dark:bg-premium-gray p-5 rounded-[32px] flex items-center gap-4 shadow-luxury border border-white/50 dark:border-white/5 active:border-gold/30 transition-all group animate-slide-up"
+                            className="bg-premium-cream dark:bg-premium-gray p-3 rounded-[32px] flex items-center gap-3 shadow-luxury border border-white/50 dark:border-white/5 active:border-gold/30 transition-all group animate-slide-up"
                         >
                             <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 dark:border-white/5 shadow-inner shrink-0 group-hover:scale-105 transition-transform duration-500 bg-premium-charcoal/5 dark:bg-premium-charcoal/30 flex items-center justify-center">
                                 <ServiceImage src={service.imageUrl} name={service.name} iconSize="text-3xl" />
                             </div>
 
                             <div className="flex-1 min-w-0 py-1">
-                                <h4 className="text-base font-bold text-premium-charcoal dark:text-white group-hover:text-gold transition-colors leading-snug">{service.name}</h4>
+                                <h4 className="text-sm font-bold text-premium-charcoal dark:text-white group-hover:text-gold transition-colors leading-tight break-words">{service.name}</h4>
                                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                     <span className="text-[8px] font-black bg-gold/10 text-gold px-1.5 py-0.5 rounded uppercase tracking-widest">{service.category}</span>
                                     <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">{service.duration} MIN</span>
@@ -70,9 +70,9 @@ export const AllServicesScreen: React.FC<{ onBack: () => void; shopConfig: ShopC
                                 )}
                             </div>
 
-                            <div className="text-right shrink-0 pl-2">
-                                <p className="text-xl font-black text-gold tracking-tight">
-                                    <span className="text-[10px] mr-0.5 opacity-60">R$</span>{service.price.toFixed(0)}
+                            <div className="text-right shrink-0 pl-1 flex flex-col items-end">
+                                <p className="text-lg font-black text-gold tracking-tight whitespace-nowrap">
+                                    <span className="text-[10px] mr-0.5 opacity-60">R$</span>{service.price.toFixed(2).replace('.', ',')}
                                 </p>
                             </div>
                         </div>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BookingStep, Service, Professional, Appointment } from './types';
 import { TIME_SLOTS } from './constants';
 import { PremiumButton } from './PremiumButton';
-import { dataRepository, isManuallyClosed } from './dataRepository';
+import { dataRepository, isManuallyClosed, getLocalDateISO, isTimeWithinRange } from './dataRepository';
 import { ServiceImage } from './ServiceImage';
 import { notificationService } from './notificationService';
 
@@ -21,23 +21,22 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
-  // Generating dates for the next 14 days and filtering by work_days defined in Admin
-  const workDays = shopConfig?.work_days || [1, 2, 3, 4, 5, 6]; // Default: Segunda a Sábado
+  // Generating dates for the next 7 days and filtering by work_days defined in Admin
+  const workDays = shopConfig?.work_days ?? [1, 2, 3, 4, 5, 6]; // Default: Segunda a Sábado
 
-  const availableDates = Array.from({ length: 14 }, (_, i) => {
+  const availableDates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
     return {
-      iso: d.toISOString().split('T')[0],
+      iso: getLocalDateISO(d),
       display: d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', ''),
       weekday: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
       full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
       dayOfWeek: d.getDay()
     };
-  }).filter(date => workDays.includes(date.dayOfWeek))
-    .slice(0, 7); // Pega os primeiros 7 dias úteis a partir de hoje
+  }).filter(date => workDays.includes(date.dayOfWeek));
 
-  const [selectedDateIso, setSelectedDateIso] = useState(availableDates[0]?.iso || '');
+  const [selectedDateIso, setSelectedDateIso] = useState(availableDates[0]?.iso || getLocalDateISO());
   const [selectedDate, setSelectedDate] = useState(availableDates[0]?.full || '');
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -276,54 +275,75 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
             </p>
 
             <div className="grid grid-cols-3 gap-3">
-              {(shopConfig?.time_slots || TIME_SLOTS).map(time => {
-                const isTaken = unavailableSlots.includes(time);
+              {(shopConfig?.time_slots || TIME_SLOTS)
+                .filter(time => isTimeWithinRange(time, shopConfig?.opening_hours))
+                .map(time => {
+                  const isTaken = unavailableSlots.includes(time);
+                  let isPast = false;
+                  const todayIso = getLocalDateISO();
 
-                // --- Past Time Check with Buffer ---
-                let isPast = false;
-                const today = new Date();
-                const todayIso = today.toISOString().split('T')[0];
-
-                // Só bloqueia horários passados se o dia selecionado for HOJE
-                if (selectedDateIso === todayIso) {
-                  const now = new Date();
-                  const [slotHour, slotMin] = time.split(':').map(Number);
-                  const slotTime = new Date();
-                  slotTime.setHours(slotHour, slotMin, 0, 0);
-
-                  // Buffer de 15 minutos (não permite agendar algo que começa em menos de 15 min)
-                  const bufferTime = new Date(now.getTime() + 15 * 60000);
-
-                  if (slotTime < bufferTime) {
-                    isPast = true;
+                  if (selectedDateIso === todayIso) {
+                    const now = new Date();
+                    const [slotHour, slotMin] = time.split(':').map(Number);
+                    const slotTime = new Date();
+                    slotTime.setHours(slotHour, slotMin, 0, 0);
+                    const bufferTime = new Date(now.getTime() + 15 * 60000);
+                    if (slotTime < bufferTime) isPast = true;
                   }
-                }
 
-                const isDisabled = isTaken || isPast;
+                  const isDisabled = isTaken || isPast;
 
-                return (
-                  <button
-                    key={time}
-                    disabled={isDisabled}
-                    onClick={() => !isDisabled && setSelectedTime(time)}
-                    className={`py-3 rounded-premium font-bold text-sm transition-all relative shadow-luxury ${selectedTime === time
-                      ? 'bg-gold text-premium-black shadow-gold-glow'
-                      : isDisabled
-                        ? 'bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-white/10 cursor-not-allowed border-none shadow-none'
-                        : 'bg-premium-cream dark:bg-premium-gray text-gray-400 hover:border-gold/50 border-2 border-transparent'
-                      }`}
-                  >
-                    {time}
-                    {isTaken && !isPast && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={time}
+                      disabled={isDisabled}
+                      onClick={() => !isDisabled && setSelectedTime(time)}
+                      className={`py-3 rounded-premium font-bold text-sm transition-all relative shadow-luxury ${selectedTime === time
+                        ? 'bg-gold text-premium-black shadow-gold-glow'
+                        : isDisabled
+                          ? 'bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-white/10 cursor-not-allowed border-none shadow-none'
+                          : 'bg-premium-cream dark:bg-premium-gray text-gray-400 hover:border-gold/50 border-2 border-transparent'
+                        }`}
+                    >
+                      {time}
+                      {isTaken && !isPast && (
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
             </div>
+
+            {/* Mensagem caso não existam horários disponíveis */}
+            {!(shopConfig?.time_slots || TIME_SLOTS).some(time => {
+              if (!isTimeWithinRange(time, shopConfig?.opening_hours)) return false;
+
+              const isTaken = unavailableSlots.includes(time);
+              const todayIso = getLocalDateISO();
+              let isPast = false;
+              if (selectedDateIso === todayIso) {
+                const now = new Date();
+                const [slotHour, slotMin] = time.split(':').map(Number);
+                const slotTime = new Date();
+                slotTime.setHours(slotHour, slotMin, 0, 0);
+                if (slotTime < new Date(now.getTime() + 15 * 60000)) isPast = true;
+              }
+              return !isTaken && !isPast;
+            }) && (
+                <div className="mt-8 p-6 bg-gold/5 border border-gold/10 rounded-premium text-center animate-fade-in">
+                  <span className="material-icons-round text-gold/40 text-3xl mb-2">event_busy</span>
+                  <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Infelizmente não há horários</p>
+                  <p className="text-xs text-white/60 mt-1 font-bold">
+                    {selectedDateIso === getLocalDateISO()
+                      ? 'Todos os horários de hoje já passaram ou estão ocupados.'
+                      : 'Todos os horários para este dia já estão preenchidos.'}
+                  </p>
+                  <p className="text-[9px] text-gold/60 mt-3 font-black uppercase tracking-widest">Tente selecionar outra data acima</p>
+                </div>
+              )}
             <p className="text-center text-[10px] text-gray-400 mt-6 mt-4">
               Horários indisponíveis estão bloqueados.
             </p>

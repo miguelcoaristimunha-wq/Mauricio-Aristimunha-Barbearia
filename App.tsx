@@ -11,7 +11,7 @@ import { ProfileScreen } from './ProfileScreen.tsx';
 import { RankingScreen } from './RankingScreen.tsx';
 import { AllServicesScreen } from './AllServicesScreen.tsx';
 import { NotificationSettings } from './NotificationSettings.tsx';
-import { dataRepository } from './dataRepository';
+import { dataRepository, isShopOpen } from './dataRepository';
 import { supabase } from './supabase';
 
 const App: React.FC = () => {
@@ -41,6 +41,13 @@ const App: React.FC = () => {
     const scrollables = document.querySelectorAll('.overflow-y-auto');
     scrollables.forEach(el => el.scrollTop = 0);
   }, [screen]);
+
+  // Total Lock: Se a loja fechar e o usuário estiver tentando agendar, volta pro início
+  useEffect(() => {
+    if (screen === AppScreen.BOOKING && !isShopOpen(shopConfig)) {
+      setScreen(AppScreen.HOME);
+    }
+  }, [screen, shopConfig]);
 
   // Sincronização e Mirroring
   useEffect(() => {

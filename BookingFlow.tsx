@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BookingStep, Service, Professional, Appointment } from './types';
 import { TIME_SLOTS } from './constants';
 import { PremiumButton } from './PremiumButton';
-import { dataRepository, isManuallyClosed, getLocalDateISO, isTimeWithinRange } from './dataRepository';
+import { dataRepository, isShopOpen, getLocalDateISO, isTimeWithinRange } from './dataRepository';
 import { ServiceImage } from './ServiceImage';
 import { notificationService } from './notificationService';
 
@@ -42,17 +42,16 @@ export const BookingFlow: React.FC<BookingFlowProps> = ({ onCancel, onComplete, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unavailableSlots, setUnavailableSlots] = useState<string[]>([]);
 
-  // Guard: Se a barbearia estiver fechada manualmente, mostra tela de erro/aviso
-  if (isManuallyClosed(shopConfig)) {
+  // Guard: Se a barbearia estiver fechada (manual ou automático), bloqueia a tela
+  if (!isShopOpen(shopConfig)) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-10 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
-          <span className="material-icons-round text-red-500 text-4xl">store_front</span>
+        <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mb-6">
+          <span className="material-icons-round text-gold text-4xl">schedule</span>
         </div>
-        <h2 className="font-display text-2xl text-premium-black dark:text-white mb-2">Barbearia Fechada</h2>
+        <h2 className="font-display text-2xl text-premium-black dark:text-white mb-2">Sistema Indisponível</h2>
         <p className="text-gray-500 text-sm leading-relaxed mb-8">
-          Desculpe o transtorno, mas o administrador desativou novos agendamentos temporariamente. <br />
-          Tente novamente mais tarde!
+          A barbearia está fechada no momento. Agendamentos ficam disponíveis apenas durante nosso horário de funcionamento.
         </p>
         <button
           onClick={onCancel}

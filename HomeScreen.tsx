@@ -87,8 +87,8 @@ export const HomeScreen: React.FC<{
           </div>
           <p className="text-[10px] text-gray-500 mt-1 font-medium ml-9">
             {isClosedManually
-              ? 'O admin desabilitou novos agendamentos temporariamente.'
-              : 'Estamos fechados agora, mas você ainda pode agendar para os próximos horários!'}
+              ? 'O administrador desativou novos agendamentos temporariamente.'
+              : 'Agendamentos ficam disponíveis apenas durante nosso horário de funcionamento.'}
           </p>
         </div>
       )}

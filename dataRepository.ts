@@ -149,7 +149,7 @@ class DataRepository {
             .channel('global_sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, callback)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'professionals' }, callback)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_config' }, callback)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, callback)
             .subscribe();
 
         return () => {

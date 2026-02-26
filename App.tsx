@@ -140,15 +140,13 @@ const App: React.FC = () => {
 
       setAppointments(prev => {
         if (eventType === 'INSERT') {
-          // Prevent duplicates if already added via onComplete callback
           if (prev.some(a => a.id === newRecord.id)) return prev;
 
-          // Map database snake_case to app camelCase if needed, 
-          // though typically getAppointments handles this, INSERT payload might be raw
           const mappedRecord = {
             ...newRecord,
             clientId: newRecord.client_id,
             serviceId: newRecord.service_id,
+            professionalId: newRecord.professional_id,
             totalPrice: newRecord.price || newRecord.totalPrice
           };
           return [mappedRecord, ...prev];
@@ -158,7 +156,9 @@ const App: React.FC = () => {
             ...a,
             ...newRecord,
             clientId: newRecord.client_id || a.clientId,
-            serviceId: newRecord.service_id || a.serviceId
+            serviceId: newRecord.service_id || a.serviceId,
+            professionalId: newRecord.professional_id || (a as any).professionalId,
+            totalPrice: newRecord.price || newRecord.total_price || a.totalPrice
           } : a);
         }
         if (eventType === 'DELETE') return prev.filter(a => a.id !== oldRecord.id);
@@ -172,13 +172,20 @@ const App: React.FC = () => {
     });
 
     const unsubscribeProfile = dataRepository.subscribeToChanges('clients', (payload) => {
-      if (user?.id && (payload.new?.id === user.id || payload.old?.id === user.id)) {
+      const { eventType, new: newRecord } = payload;
+      if (user?.id && (newRecord?.id === user.id || payload.old?.id === user.id)) {
         console.log('Real-time profile update:', payload);
-        if (payload.new) {
+        if (eventType === 'DELETE') {
+          localStorage.clear();
+          setUser(null);
+          setScreen(AppScreen.AUTH);
+          return;
+        }
+        if (newRecord) {
           const updatedUser = {
             ...user,
-            ...payload.new,
-            whatsapp: payload.new.phone || user.whatsapp // Mapeamento para garantir compatibilidade
+            ...newRecord,
+            whatsapp: newRecord.phone || user.whatsapp
           };
           setUser(updatedUser);
           localStorage.setItem('luxury_barber_user', JSON.stringify(updatedUser));
